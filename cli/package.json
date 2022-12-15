@@ -1,6 +1,6 @@
 {
   "name": "@semi-framework/cli",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "description": "Save the Name, package is in progress of making"
 }
