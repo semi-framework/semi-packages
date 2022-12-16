@@ -1,0 +1,10 @@
+{
+  "name": "semi-packages",
+  "version": "0.0.0",
+  "description": "All packages of the semi-framework.",
+  "repository": "https://github.com/semi-framework/semi-packages.git",
+  "homepage": "https://github.com/semi-framework",
+  "author": "Laurenz1606 <laurenz1606 <laurenz.rausche@gmail.com>>",
+  "license": "MIT",
+  "private": false
+}
