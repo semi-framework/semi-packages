@@ -4,6 +4,8 @@ import { EOL } from "os";
 import path from "path";
 import slugify from "slugify";
 import { CWD, prompt } from "../cmd";
+import { askBool } from "../utils/asks";
+import { exec } from "../utils/exec";
 import { installPackages } from "../utils/installPackages";
 
 //create interface arguments
@@ -56,7 +58,7 @@ export async function create(
   process.chdir(ROOT_DIR);
 
   //create root file
-  await writeFile(ROOT_FILE, NAME, "utf-8");
+  await writeFile(ROOT_FILE, ROOT_DIR, "utf-8");
 
   //package json content
   const PACKAGE_JSON = {
@@ -72,14 +74,9 @@ export async function create(
     },
     scripts: {
       build: "semi-cli build bundle",
-      "build:backend": "semi-cli build backend",
-      "build:frontend": "semi-cli build frontend",
+      cli: "semi-cli",
       delete: "semi-cli delete bundle",
-      "delete:backend": "semi-cli delete backend",
-      "delete:frontend": "semi-cli delete frontend",
-      format: "semi-cli all",
-      "format:backend": "semi-cli backend",
-      "formar:frontend": "semi-cli frontend",
+      format: "semi-cli format all",
       reinstall: "semi-cli reinstall",
     },
   };
@@ -136,8 +133,67 @@ package-lock.json`;
 
   //create backend function
   async function createBackend() {
+    //constants
+    const SRC_DIR = path.join(BACKEND_DIR, "src");
+    const PACKAGE_FILE = path.join(BACKEND_DIR, "package.json");
+    const INDEX_FILE = path.join(SRC_DIR, "index.ts");
+
     //create backend directory
     await mkdir(BACKEND_DIR);
+
+    //create src directory
+    await mkdir(SRC_DIR);
+
+    //package json content
+    const PACKAGE_JSON = {
+      name: "backend",
+      version: "0.0.0",
+      description: `Backend of ${NAME} project.`,
+      license: "MIT",
+      scripts: {
+        build: "semi-cli build backend",
+        cli: "semi-cli",
+        delete: "semi-cli delete backend",
+        format: "semi-cli format backend",
+        reinstall: "semi-cli reinstall",
+      },
+    };
+
+    //create package json
+    await writeFile(
+      PACKAGE_FILE,
+      JSON.stringify(PACKAGE_JSON, null, 2) + EOL,
+      "utf-8",
+    );
+
+    //install basic packages
+    await installPackages(
+      "@semi-framework/node @semi-framework/utils",
+      BACKEND_DIR,
+    );
+
+    //install basic packages (dev)
+    await installPackages("@types/node @semi-framework/cli", BACKEND_DIR, true);
+
+    //create ts config
+    await exec("./node_modules/.bin/tsc", ["--init", "--outDir", "dist"], {
+      cwd: BACKEND_DIR,
+    });
+
+    //create basic index
+    await writeFile(INDEX_FILE, "", "utf-8");
+
+    //ask for express
+    const express = await askBool("Do you want to install express?", true);
+
+    //handle express
+    if (express) {
+      //install express packages
+      await installPackages("express cors", BACKEND_DIR);
+
+      //install express packages (dev)
+      await installPackages("@types/express @types/cors", BACKEND_DIR, true);
+    }
   }
 
   //create frontend function
