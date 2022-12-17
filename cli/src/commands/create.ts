@@ -50,7 +50,7 @@ export async function create(
   }
 
   //create project directory
-  await mkdir(ROOT_DIR);
+  await mkdir(ROOT_DIR, { recursive: true });
 
   //switch the directory
   process.chdir(ROOT_DIR);
