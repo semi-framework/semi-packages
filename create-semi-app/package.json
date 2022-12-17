@@ -1,6 +1,6 @@
 {
   "name": "create-semi-app",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "main": "dist/index.js",
   "bin": {
     "create-semi-app": "dist/index.js"
@@ -24,9 +24,9 @@
     "build:full": "npm run build:clean && npm run build:compile",
     "dev:format": "prettier --write --config ./package.json src",
     "dev:remove-packages": "rimraf node_modules yarn.lock package-lock.json",
-    "dev:start": "ts-node src/index.ts"
+    "dev:start": "ts-node src/index.ts",
+    "prepublish": "npm run build:full"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^18.11.15",
     "prettier": "^2.8.1",
