@@ -5,6 +5,12 @@ import path from "path";
 import slugify from "slugify";
 import { CWD, prompt } from "../cmd";
 import { askBool } from "../utils/asks";
+import {
+  createExpress,
+  createMongoose,
+  createRedis,
+  createSemi,
+} from "../utils/createModules";
 import { exec } from "../utils/exec";
 import { installPackages } from "../utils/installPackages";
 
@@ -135,6 +141,7 @@ package-lock.json`;
   async function createBackend() {
     //constants
     const SRC_DIR = path.join(BACKEND_DIR, "src");
+    const COMPONENT_DIR = path.join(SRC_DIR, "components");
     const PACKAGE_FILE = path.join(BACKEND_DIR, "package.json");
     const INDEX_FILE = path.join(SRC_DIR, "index.ts");
 
@@ -148,14 +155,17 @@ package-lock.json`;
     const PACKAGE_JSON = {
       name: "backend",
       version: "0.0.0",
+      main: "dist/index.js",
       description: `Backend of ${NAME} project.`,
       license: "MIT",
       scripts: {
         build: "semi-cli build backend",
         cli: "semi-cli",
         delete: "semi-cli delete backend",
+        dev: "semi-cli start backend",
         format: "semi-cli format backend",
         reinstall: "semi-cli reinstall",
+        start: "node ."
       },
     };
 
@@ -164,12 +174,6 @@ package-lock.json`;
       PACKAGE_FILE,
       JSON.stringify(PACKAGE_JSON, null, 2) + EOL,
       "utf-8",
-    );
-
-    //install basic packages
-    await installPackages(
-      "@semi-framework/node @semi-framework/utils",
-      BACKEND_DIR,
     );
 
     //install basic packages (dev)
@@ -183,17 +187,38 @@ package-lock.json`;
     //create basic index
     await writeFile(INDEX_FILE, "", "utf-8");
 
+    //create component directory
+    await mkdir(COMPONENT_DIR);
+
+    //create semi
+    await createSemi(BACKEND_DIR);
+
     //ask for express
-    const express = await askBool("Do you want to install express?", true);
+    const express = await askBool(
+      "Do you want to add express (webserver)?",
+      true,
+    );
+
+    //ask for mongoose
+    const mongoose = await askBool(
+      "Do you want to add mongoose (database)?",
+      true,
+    );
+
+    //ask for redis
+    const redis = await askBool(
+      "Do you want to add ioredis (RAM database)?",
+      true,
+    );
 
     //handle express
-    if (express) {
-      //install express packages
-      await installPackages("express cors", BACKEND_DIR);
+    if (express) await createExpress(SRC_DIR, BACKEND_DIR);
 
-      //install express packages (dev)
-      await installPackages("@types/express @types/cors", BACKEND_DIR, true);
-    }
+    //handle mongoose
+    if (mongoose) await createMongoose(COMPONENT_DIR, BACKEND_DIR);
+
+    //handle redis
+    if (redis) await createRedis(COMPONENT_DIR, BACKEND_DIR);
   }
 
   //create frontend function

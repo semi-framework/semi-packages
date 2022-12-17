@@ -4,6 +4,9 @@ build frontend
 
 create <name> [path]
 
+start backend
+start frontend
+
 delete bundle
 delete backend
 delete frontend
