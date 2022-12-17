@@ -23,6 +23,7 @@ export async function installPackages(
     {
       stdio: "inherit",
       cwd: directory,
+      shell: process.platform === "win32",
     },
   );
 
