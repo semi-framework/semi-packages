@@ -1,0 +1,15 @@
+build bundle
+build backend
+build frontend
+
+create <name> [path]
+
+delete bundle
+delete backend
+delete frontend
+
+format all
+format backend
+format frontend
+
+reinstall
