@@ -1,4 +1,5 @@
 import { appendFile, writeFile } from "fs/promises";
+import { EOL } from "os";
 import path from "path";
 import { installPackages } from "./installPackages";
 
@@ -9,10 +10,15 @@ export async function createSemi(BACKEND_DIR: string) {
 }
 
 //create express module
-export async function createExpress(SRC_DIR: string, BACKEND_DIR: string) {
+export async function createExpress(
+  SRC_DIR: string,
+  BACKEND_DIR: string,
+  useAuth: boolean,
+) {
   //constants
   const EXPRESS_FILE = path.join(SRC_DIR, "express.ts");
   const INDEX_FILE = path.join(SRC_DIR, "index.ts");
+  const ENV_FILE = path.join(BACKEND_DIR, ".env");
 
   //install express
   await installPackages("express cors", BACKEND_DIR);
@@ -20,10 +26,15 @@ export async function createExpress(SRC_DIR: string, BACKEND_DIR: string) {
   //install express (dev)
   await installPackages("@types/express @types/cors", BACKEND_DIR, true);
 
+  //add env vars
+  await appendFile(ENV_FILE, `PORT=${EOL}CORS=${EOL}`, "utf-8");
+
   //file content
   const EXPRESS = `import cors from "cors";
 import express from "express";
-import { env, logger } from "@semi-framework/utils";
+import { env, logger } from "@semi-framework/utils";${
+    useAuth ? EOL + 'import { auth } from "./Components/auth";' : ""
+  }
 
 //get listening port
 const APP_PORT = env("PORT", true, "5000");
@@ -35,7 +46,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({ origin: env("CORS", false, "*") }));
 
-//use routers
+//use routers${useAuth ? EOL + 'app.use("/auth", auth.Router);' : ""}
 
 //listen on APP_PORT
 app.listen(APP_PORT, () => {
@@ -51,7 +62,30 @@ logger.debug("Express: App created!");
   await writeFile(EXPRESS_FILE, EXPRESS, "utf-8");
 
   //append express in index file
-  await appendFile(INDEX_FILE, 'import "./express"');
+  await appendFile(INDEX_FILE, 'import "./express"', "utf-8");
+}
+
+//create auth module
+export async function createAuth(COMPONENT_DIR: string, BACKEND_DIR: string) {
+  //constants
+  const AUTH_FILE = path.join(COMPONENT_DIR, "auth.ts");
+  const ENV_FILE = path.join(BACKEND_DIR, ".env");
+
+  //install express
+  await installPackages("@semi-framework/node-auth", BACKEND_DIR);
+
+  //add env vars
+  await appendFile(
+    ENV_FILE,
+    `ACCESS_TOKEN_SECRET=${EOL}REFRESH_TOKEN_SECRET=${EOL}TOKEN_EXPIRES_IN=${EOL}`,
+    "utf-8",
+  );
+
+  //file content
+  const AUTH = ``;
+
+  //write file
+  await writeFile(AUTH_FILE, AUTH, "utf-8");
 }
 
 //create mongoose module
@@ -61,9 +95,13 @@ export async function createMongoose(
 ) {
   //constants
   const MONGOOSE_FILE = path.join(COMPONENT_DIR, "mongoose.ts");
+  const ENV_FILE = path.join(BACKEND_DIR, ".env");
 
   //install mongoose
   await installPackages("mongoose", BACKEND_DIR);
+
+  //add env vars
+  await appendFile(ENV_FILE, `MONGODB_URL=${EOL}`, "utf-8");
 
   //file content
   const MONGOOSE = `import { Connection, createConnection } from "mongoose";
@@ -94,9 +132,13 @@ logger.debug("Mongoose: Connection created!");
 export async function createRedis(COMPONENT_DIR: string, BACKEND_DIR: string) {
   //constants
   const REDIS_FILE = path.join(COMPONENT_DIR, "redis.ts");
+  const ENV_FILE = path.join(BACKEND_DIR, ".env");
 
   //install redis
   await installPackages("ioredis", BACKEND_DIR);
+
+  //add env vars
+  await appendFile(ENV_FILE, `REDIS_URL=${EOL}`, "utf-8");
 
   //file content
   const REDIS = `import Redis from "ioredis";

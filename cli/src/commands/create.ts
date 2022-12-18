@@ -6,6 +6,7 @@ import slugify from "slugify";
 import { CWD, prompt } from "../cmd";
 import { askBool } from "../utils/asks";
 import {
+  createAuth,
   createExpress,
   createMongoose,
   createRedis,
@@ -37,6 +38,7 @@ export async function create(
   const PACKAGE_FILE = path.join(ROOT_DIR, "package.json");
   const GITIGNORE_FILE = path.join(ROOT_DIR, ".gitignore");
   const ROOT_FILE = path.join(ROOT_DIR, ".semiroot");
+  const ENV_FILE = path.join(BACKEND_DIR, ".env");
 
   //check if directory exists
   if (existsSync(ROOT_DIR)) {
@@ -141,12 +143,15 @@ package-lock.json`;
   async function createBackend() {
     //constants
     const SRC_DIR = path.join(BACKEND_DIR, "src");
-    const COMPONENT_DIR = path.join(SRC_DIR, "components");
+    const COMPONENT_DIR = path.join(SRC_DIR, "Components");
     const PACKAGE_FILE = path.join(BACKEND_DIR, "package.json");
     const INDEX_FILE = path.join(SRC_DIR, "index.ts");
 
     //create backend directory
     await mkdir(BACKEND_DIR);
+
+    //create env file
+    await writeFile(ENV_FILE, "DEBUG=1" + EOL, "utf-8");
 
     //create src directory
     await mkdir(SRC_DIR);
@@ -165,7 +170,7 @@ package-lock.json`;
         dev: "semi-cli start backend",
         format: "semi-cli format backend",
         reinstall: "semi-cli reinstall",
-        start: "node ."
+        start: "node .",
       },
     };
 
@@ -199,6 +204,16 @@ package-lock.json`;
       true,
     );
 
+    //define auth
+    let auth = false;
+
+    //ask for auth when express is used
+    if (express)
+      auth = await askBool(
+        "Do you want to add @semi-framework/node-auth (Backend authentication handler)?",
+        true,
+      );
+
     //ask for mongoose
     const mongoose = await askBool(
       "Do you want to add mongoose (database)?",
@@ -212,7 +227,10 @@ package-lock.json`;
     );
 
     //handle express
-    if (express) await createExpress(SRC_DIR, BACKEND_DIR);
+    if (express) await createExpress(SRC_DIR, BACKEND_DIR, auth);
+
+    //handle auth
+    if (auth) await createAuth(COMPONENT_DIR, BACKEND_DIR);
 
     //handle mongoose
     if (mongoose) await createMongoose(COMPONENT_DIR, BACKEND_DIR);
